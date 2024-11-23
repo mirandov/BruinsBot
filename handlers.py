@@ -1,10 +1,9 @@
+import config
 
 from aiogram import types, F, Router, methods, Bot
 from aiogram.types import Message
 from aiogram.filters import Command
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import logging
-import config
 
 router = Router()
 bot = Bot(token=config.BOT_TOKEN)
@@ -25,14 +24,8 @@ async def start_handler(msg: Message):
     
 
 
-# @router.message()
-# async def message_handler(msg: Message):
-#     # . (2370090966, question="Пример тренировки",is_anonymous=False, options=["буду", "не буду"])
-#     await msg.answer_poll(question="Пример тренировки",is_anonymous=False, options=["буду", "не буду"])
-
 @router.message(Command("job"))
 async def job_handler(msg: Message):
-    # send_message_to_test(msg)
     admins = await get_admins(msg.chat.id)
     if (msg.from_user.id in admins):
         scheduler = AsyncIOScheduler()
@@ -40,7 +33,3 @@ async def job_handler(msg: Message):
         scheduler.start()
     else:
         await msg.answer(f"Нет прав на запуск данной команды. Обратитесь за правами к администратору")
-    
-    
-    # . (2370090966, question="Пример тренировки",is_anonymous=False, options=["буду", "не буду"])
-    # await msg.answer_poll()
