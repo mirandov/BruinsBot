@@ -29,7 +29,7 @@ async def job_handler(msg: Message):
     admins = await get_admins(msg.chat.id)
     if (msg.from_user.id in admins):
         scheduler = AsyncIOScheduler()
-        scheduler.add_job(send_message_to_test, 'interval', seconds=3, args=(msg,))
+        scheduler.add_job(send_message_to_test, 'cron', day_of_week='mon,sat', hour=4, minute=31, args=(msg,))
         scheduler.start()
     else:
         await msg.answer(f"Нет прав на запуск данной команды. Обратитесь за правами к администратору")
