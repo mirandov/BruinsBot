@@ -4,13 +4,11 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-
-import config
-from handlers import router
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from handlers import router, bot
 
 
 async def main():
-    bot = Bot(token=config.BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
     await bot.delete_webhook(drop_pending_updates=True)
@@ -18,5 +16,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     asyncio.run(main())
