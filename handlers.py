@@ -50,38 +50,18 @@ async def handle_decline_traning_(callback_query: CallbackQuery):
 async def handle_accept_coach_traning(callback_query: CallbackQuery):
     old_message = callback_query.message.text
     prefix_message = old_message.split('Тренера:')[0]
-    reg_exp = (re.split('r[\n,@ ]+', old_message.split('Тренера:')[1] ).split('@'))
-    message_split_coach = old_message.split('Тренера:')[1].split('r[\n, ]+')
-    print(reg_exp)
+    message_split_coach = old_message.split('Тренера:')[1].split('\n')
     add_accepted_list = f'{callback_query.from_user.first_name} {callback_query.from_user.last_name} (@{callback_query.from_user.username}) \n'
     check_in_list = False
     for i in message_split_coach:
-        # print("+++++++++++++++++++++++++++++++")
-        # print("I")
-        # print(message_split_coach)
-        # print("+++++++++++++++++++++++++++++++")
-        
-        if(i == add_accepted_list):
-            
-            
-            check_in_list = True
+        if (i!=''):
+            username = i.split('@')[1].split(')')[0]
+            if(username == callback_query.from_user.username):
+                check_in_list = True
     if (check_in_list):
         await callback_query.answer(text="Уже голосовали", show_alert=True)
     else:
         message_split_coach.append(add_accepted_list)
         new_message = prefix_message + "Тренера:" + '\n'.join(message_split_coach)
         await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=new_message, inline_message_id=callback_query.inline_message_id)
-    # print(callback_query.from_user)
-    # print("+++++++++++++++++++++++++++++++")
-    # print("old_message")
-    # print(old_message)
-    # print("+++++++++++++++++++++++++++++++")
-    # print("+++++++++++++++++++++++++++++++")
-    # print("prefix_message")
-    # print(prefix_message)
-    # print("+++++++++++++++++++++++++++++++")
-    # print("+++++++++++++++++++++++++++++++")
-    # print("message_split_coach")
-    # print(message_split_coach)
-    # print("+++++++++++++++++++++++++++++++")
-    # await callback_query.answer(text="Рады что вы приедите!", show_alert=True)
+  
