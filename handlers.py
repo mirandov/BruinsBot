@@ -10,7 +10,7 @@ from inline_keyboards import (build_keyboard, accept_traning_callback_data, decl
 router = Router()
 bot = Bot(token=config.BOT_TOKEN)
 
-async def send_message_to_test(msg: Message):
+async def send_message_of_tranning(msg: Message):
     markup = build_keyboard()
     msg_to_pin = await msg.answer(f'{config.POST_INIT}', parse_mode='html', reply_markup=markup)
     await bot.pin_chat_message(chat_id = msg_to_pin.chat.id, message_id= msg_to_pin.message_id)
@@ -84,8 +84,8 @@ async def job_handler(msg: Message):
     admins = await get_admins(msg.chat.id)
     if (msg.from_user.id in admins):
         scheduler = AsyncIOScheduler()
-        # scheduler.add_job(send_message_to_test, 'cron', day_of_week='mon,sat', hour=4, minute=31, args=(msg,))
-        scheduler.add_job(send_message_to_test, 'interval', seconds=4, args=(msg,))
+        # scheduler.add_job(send_message_of_tranning, 'cron', day_of_week='mon,sat', hour=4, minute=31, args=(msg,))
+        scheduler.add_job(send_message_of_tranning, 'interval', seconds=4, args=(msg,))
         scheduler.start()
     else:
         await msg.answer(f"Нет прав на запуск данной команды. Обратитесь за правами к администратору")
