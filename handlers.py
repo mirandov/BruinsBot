@@ -3,9 +3,9 @@ import sqlite3
 
 from aiogram import  F, Router, Bot
 from aiogram.types import Message, CallbackQuery, InputFile, FSInputFile
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandStart
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from inline_keyboards import (build_keyboard, accept_traning_callback_data, decline_traning_callback_data, accept_coach_traning_callback_data)
+from inline_keyboards import (build_keyboard, accept_traning_callback_data, decline_traning_callback_data, accept_coach_traning_callback_data,sign_up_callback_data)
 
 router = Router()
 bot = Bot(token=config.BOT_TOKEN)
@@ -25,8 +25,6 @@ async def get_admins(chat_id):
     return result
 
 async def add_coach_to_ul(callback):
-    print(callback.message.caption)
-    print("+++++++++++++++++++++++++++++++++")
     old_message = callback.message.caption
     prefix_message = old_message.split('Тренера:')[0]
     message_split_coach = old_message.split('Тренера:')[1].split('\n')
@@ -75,31 +73,57 @@ async def add_player_dicline_to_ul(callback):
         ul_diclined_player.append(add_accepted_list)
         ul_diclined_player_str = (','.join(ul_diclined_player)).replace(',', '\n')
         return (prefix_message + "Будут отсутствовать на тренировке: \n" + ul_diclined_player_str + "\n👤 Тренера:" + postfix_message)
-
-@router.message(Command("createBD"))
-async def create_bd_hendler(msg: Message):
-    conn = sqlite3.connect('bruinsTeam.sql')
-    cur = conn.cursor()
-    cur.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, \
+    
+def create_tbl_users(connector):
+    cursor = connector.cursor()
+    cursor.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, \
                  login varchar(50),\
                  tg_id int,\
                  team varchar(50),\
                  position varchar(50),\
                  coach boolean\
-                ); \
-                CREATE TABLE IF NOT EXISTS post_statistic (id int auto_increment primary key, \
+                );')
+    connector.commit()
+    cursor.close()
+    return True
+
+def create_tbl_post_statics(connector):
+    cursor = connector.cursor()
+    cursor.execute('CREATE TABLE IF NOT EXISTS post_statistic (id int auto_increment primary key, \
                  chat_id int,\
                  user_id int,\
                  option_selected int,\
                  date_traning datetime\
                 );')
-    conn.commit()
-    cur.close()
-    conn.close()
+    connector.commit()
+    cursor.close()
+    return True
+
+def check_registred(message: Message):
+    tg_id = message.from_user.id
+    connector = sqlite3.connect('bruinsTeam.sql')
+    cursor = connector.cursor()
+    result_select = cursor.execute("SELECT * FROM users where tg_id ='%d'" %(tg_id))
+    cursor.close()
+    if (result_select.row_factory == None):
+        return False
+    else:
+        return True
+    
+    
+@router.message(Command("createBD"))
+async def create_bd_hendler(msg: Message):
+    connector = sqlite3.connect('bruinsTeam.sql')
+    create_tbl_users(connector)
+    create_tbl_post_statics(connector)
+    connector.close()
     await msg.answer(f"База данных создана")
 
-@router.message(Command("start"))
+@router.message(CommandStart("start"))
 async def start_handler(msg: Message):
+    print("++++++++++++++")
+    print(msg)
+    print("++++++++++++++")
     await msg.answer(f"Привет! {msg.from_user.first_name}")
 
 
@@ -114,19 +138,40 @@ async def job_handler(msg: Message):
     else:
         await msg.answer(f"Нет прав на запуск данной команды. Обратитесь за правами к администратору")
 
+@router.message(Command("sign_up"))
+async def sing_up_handler(msg: Message):
+    await msg.answer(f"Заполни информацию")
+
+@router.callback_query(F.data == sign_up_callback_data)
+async def sign_up(callback_query: CallbackQuery):
+    bot_me = await callback_query.bot.me()
+    if (check_registred(callback_query)):
+        check_already_answer = await add_player_accept_to_ul(callback_query)
+        if (check_already_answer == ''):
+            await callback_query.answer(text="Уже голосовали", show_alert=True)
+        else:
+            await callback_query.answer(text="Красавчик! Каждая тренировка делает тебя сильнее💪", show_alert=True)
+            await bot.edit_message_caption(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, caption=check_already_answer, inline_message_id=callback_query.inline_message_id)
+            # await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
+    else:
+        await callback_query.answer(url=f't.me/{bot_me.username}?start')
 
 @router.callback_query(F.data == accept_traning_callback_data)
-async def handle_accept_traning_(callback_query: CallbackQuery):
-    check_already_answer = await add_player_accept_to_ul(callback_query)
-    if (check_already_answer == ''):
-        await callback_query.answer(text="Уже голосовали", show_alert=True)
+async def handle_accept_traning(callback_query: CallbackQuery):
+    bot_me = await callback_query.bot.me()
+    if (check_registred(callback_query)):
+        check_already_answer = await add_player_accept_to_ul(callback_query)
+        if (check_already_answer == ''):
+            await callback_query.answer(text="Уже голосовали", show_alert=True)
+        else:
+            await callback_query.answer(text="Красавчик! Каждая тренировка делает тебя сильнее💪", show_alert=True)
+            await bot.edit_message_caption(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, caption=check_already_answer, inline_message_id=callback_query.inline_message_id)
+            # await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
     else:
-        await callback_query.answer(text="Красавчик! Каждая тренировка делает тебя сильнее💪", show_alert=True)
-        await bot.edit_message_caption(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, caption=check_already_answer, inline_message_id=callback_query.inline_message_id)
-        # await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
+        await callback_query.answer(url=f't.me/{bot_me.username}?sign_up=0')
 
 @router.callback_query(F.data == decline_traning_callback_data)
-async def handle_decline_traning_(callback_query: CallbackQuery):
+async def handle_decline_traning(callback_query: CallbackQuery):
     check_already_answer = await add_player_dicline_to_ul(callback_query)
     if (check_already_answer == ''):
         await callback_query.answer(text="Уже голосовали", show_alert=True)
