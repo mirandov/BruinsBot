@@ -2,7 +2,7 @@ import config
 import re
 
 from aiogram import  F, Router, Bot
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputFile, FSInputFile
 from aiogram.filters import Command
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from inline_keyboards import (build_keyboard, accept_traning_callback_data, decline_traning_callback_data, accept_coach_traning_callback_data)
@@ -12,7 +12,9 @@ bot = Bot(token=config.BOT_TOKEN)
 
 async def send_message_of_tranning(msg: Message):
     markup = build_keyboard()
-    msg_to_pin = await msg.answer(f'{config.POST_INIT}', parse_mode='html', reply_markup=markup)
+    photo_post = FSInputFile(path='./Bruins.jpg')
+    msg_to_pin = await msg.answer_photo(photo=photo_post, caption=f'{config.POST_INIT}', parse_mode='html', reply_markup=markup)
+    # msg_to_pin = await msg.answer(f'{config.POST_INIT}', parse_mode='html', reply_markup=markup)
     await bot.pin_chat_message(chat_id = msg_to_pin.chat.id, message_id= msg_to_pin.message_id)
 
 async def get_admins(chat_id):
@@ -23,7 +25,9 @@ async def get_admins(chat_id):
     return result
 
 async def add_coach_to_ul(callback):
-    old_message = callback.message.text
+    print(callback.message.caption)
+    print("+++++++++++++++++++++++++++++++++")
+    old_message = callback.message.caption
     prefix_message = old_message.split('Тренера:')[0]
     message_split_coach = old_message.split('Тренера:')[1].split('\n')
     message_split_coach = [i for i in message_split_coach if i]
@@ -39,7 +43,7 @@ async def add_coach_to_ul(callback):
         return (prefix_message + "Тренера:\n\n" + message_split_coach_str)
     
 async def add_player_accept_to_ul(callback):
-    old_message = callback.message.text
+    old_message = callback.message.caption
     prefix_message = old_message.split('Будут на тренировке: \n')[0]
     ul_accepted_player = old_message.split('Будут на тренировке: \n')[1].split('❌ Будут отсутствовать на тренировке:')[0].split('\n')
     ul_accepted_player = [i for i in ul_accepted_player if i]
@@ -56,7 +60,7 @@ async def add_player_accept_to_ul(callback):
         return (prefix_message + "Будут на тренировке: \n" + ul_accepted_player_str + "\n❌ Будут отсутствовать на тренировке:" + postfix_message)
     
 async def add_player_dicline_to_ul(callback):
-    old_message = callback.message.text
+    old_message = callback.message.caption
     prefix_message = old_message.split('Будут отсутствовать на тренировке: \n')[0]
     ul_diclined_player = old_message.split('Будут отсутствовать на тренировке: \n')[1].split('👤 Тренера:')[0].split('\n')
     ul_diclined_player = [i for i in ul_diclined_player if i]
@@ -98,7 +102,8 @@ async def handle_accept_traning_(callback_query: CallbackQuery):
         await callback_query.answer(text="Уже голосовали", show_alert=True)
     else:
         await callback_query.answer(text="Красавчик! Каждая тренировка делает тебя сильнее💪", show_alert=True)
-        await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
+        await bot.edit_message_caption(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, caption=check_already_answer, inline_message_id=callback_query.inline_message_id)
+        # await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
 
 @router.callback_query(F.data == decline_traning_callback_data)
 async def handle_decline_traning_(callback_query: CallbackQuery):
@@ -108,7 +113,8 @@ async def handle_decline_traning_(callback_query: CallbackQuery):
     else: 
         await callback_query.answer(text="Причину об отсутсвие напиши ответом на сообщние ⬇️", show_alert=True)
         await bot.send_message(callback_query.message.chat.id, f'@{callback_query.from_user.username} напиши причину отсутсвия на тренировке!', parse_mode='html')
-        await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
+        await bot.edit_message_caption(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, caption=check_already_answer, inline_message_id=callback_query.inline_message_id)
+        # await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
 
 
 @router.callback_query(F.data == accept_coach_traning_callback_data)
@@ -118,5 +124,6 @@ async def handle_accept_coach_traning(callback_query: CallbackQuery):
         await callback_query.answer(text="Уже голосовали", show_alert=True)
     else:
         await callback_query.answer(text="Моё почтение 🦸‍♂️", show_alert=True)
-        await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
+        await bot.edit_message_caption(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, caption=check_already_answer, inline_message_id=callback_query.inline_message_id)
+        # await bot.edit_message_text(reply_markup= callback_query.message.reply_markup, chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id, text=check_already_answer, inline_message_id=callback_query.inline_message_id)
   
