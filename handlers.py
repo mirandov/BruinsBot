@@ -1,5 +1,4 @@
 import config
-import re
 
 from aiogram import  F, Router, Bot
 from aiogram.types import Message, CallbackQuery, InputFile, FSInputFile
