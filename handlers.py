@@ -75,7 +75,15 @@ async def add_player_dicline_to_ul(callback):
         ul_diclined_player_str = (','.join(ul_diclined_player)).replace(',', '\n')
         return (prefix_message + "Будут отсутствовать на тренировке: \n" + ul_diclined_player_str + "\n👤 Тренера:" + postfix_message)
 
-
+@router.message(Command("createBD"))
+async def create_bd_hendler(msg: Message):
+    conn = sqlite3.connect('bruinsTeam.sql')
+    cur = conn.cursor()
+    cur.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, name varchar(50))')
+    conn.commit()
+    cur.close()
+    conn.close()
+    await msg.answer(f"База данных создана")
 
 @router.message(Command("start"))
 async def start_handler(msg: Message):
