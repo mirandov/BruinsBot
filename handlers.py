@@ -1,4 +1,5 @@
 import config
+import sqlite3
 
 from aiogram import  F, Router, Bot
 from aiogram.types import Message, CallbackQuery, InputFile, FSInputFile
@@ -11,7 +12,7 @@ bot = Bot(token=config.BOT_TOKEN)
 
 async def send_message_of_tranning(msg: Message):
     markup = build_keyboard()
-    photo_post = FSInputFile(path='./Bruins.jpg')
+    photo_post = FSInputFile(path='./photo/LilField.png')
     msg_to_pin = await msg.answer_photo(photo=photo_post, caption=f'{config.POST_INIT}', parse_mode='html', reply_markup=markup)
     # msg_to_pin = await msg.answer(f'{config.POST_INIT}', parse_mode='html', reply_markup=markup)
     await bot.pin_chat_message(chat_id = msg_to_pin.chat.id, message_id= msg_to_pin.message_id)
@@ -79,7 +80,19 @@ async def add_player_dicline_to_ul(callback):
 async def create_bd_hendler(msg: Message):
     conn = sqlite3.connect('bruinsTeam.sql')
     cur = conn.cursor()
-    cur.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, name varchar(50))')
+    cur.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, \
+                 login varchar(50),\
+                 tg_id int,\
+                 team varchar(50),\
+                 position varchar(50),\
+                 coach boolean\
+                ); \
+                CREATE TABLE IF NOT EXISTS post_statistic (id int auto_increment primary key, \
+                 chat_id int,\
+                 user_id int,\
+                 option_selected int,\
+                 date_traning datetime\
+                );')
     conn.commit()
     cur.close()
     conn.close()
